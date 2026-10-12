@@ -1,0 +1,17 @@
+name: sadad-dotnet
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 5080
+      DATA_DIR: /app/data
+    ports:
+      - "${HOST_PORT:-5080}:5080"
+    volumes:
+      - data:/app/data
+
+volumes:
+  data:
