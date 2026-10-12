@@ -56,12 +56,18 @@ final class Config
     {
         if (!is_dir($this->dataDir)) mkdir($this->dataDir, 0775, true);
         $file = $this->dataDir . '/sandbox-key';
-        $key = is_file($file) ? trim((string) file_get_contents($file)) : '';
-        if ($key === '') {
-            $key = base64_encode(random_bytes(24));
-            file_put_contents($file, $key, LOCK_EX);
+        // Create it exactly once even when several PHP processes start together; everyone reads the winner's key.
+        $fh = @fopen($file, 'x');
+        if ($fh !== false) {
+            fwrite($fh, base64_encode(random_bytes(24)));
+            fclose($fh);
         }
-        return $key;
+        for ($i = 0; $i < 50; $i++) {
+            $key = trim((string) @file_get_contents($file));
+            if ($key !== '') return $key;
+            usleep(50_000); // the creating process hasn't written it yet
+        }
+        throw new \RuntimeException("{$file} is empty");
     }
 
     private static function loadDotEnv(string $file): void

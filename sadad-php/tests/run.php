@@ -52,6 +52,25 @@ check('LocalDateTime is Tehran MM/dd/yyyy hh:mm:ss AM', function () {
     same('07/01/2026 01:45:05 PM', SadadSign::localDateTime(new DateTimeImmutable('2026-07-01T10:15:05Z')));
 });
 
+check('parallel start shares one sandbox key', function () {
+    $dir = sys_get_temp_dir() . '/sadad-php-race-' . bin2hex(random_bytes(4));
+    $startAt = microtime(true) + 1.5;
+    $code = 'require "' . __DIR__ . '/../src/SadadClient.php"; require "' . __DIR__ . '/../src/Config.php";'
+        . 'while (microtime(true) < (float) getenv("START_AT")); echo (new Sadad\Config())->sandbox["terminalKey"];';
+    $procs = [];
+    for ($i = 0; $i < 12; $i++) {
+        $procs[] = proc_open([PHP_BINARY, '-r', $code], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null,
+            ['SADAD_MODE' => 'sandbox', 'DATA_DIR' => $dir, 'START_AT' => (string) $startAt]);
+        $outs[] = $pipes[1];
+    }
+    $keys = array_unique(array_map(fn ($p) => trim((string) stream_get_contents($p)), $outs));
+    array_map('proc_close', $procs);
+    array_map('unlink', glob("{$dir}/*") ?: []);
+    @rmdir($dir);
+    same(1, count($keys), 'distinct keys ' . implode(',', $keys));
+    if (strlen(base64_decode(reset($keys))) !== 24) throw new RuntimeException('bad key');
+});
+
 // ---------------------------------------------------------------- flow over HTTP
 
 $port = 8999;

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, money %}
+{% block body %}
+<section class="card">
+  <h1>جزئیات تراکنش {{ badge(o.status) }}</h1>
+  <dl class="summary grid">
+    <div><dt>مبلغ</dt><dd>{{ money(o) }} ({{ o.amount_rial | fa_num }} ریال)</dd></div>
+    <div><dt>پرداخت‌کننده</dt><dd>{{ o.name }} {{ o.mobile | fa_digits }}</dd></div>
+    <div><dt>OrderId بانک</dt><dd class="mono">{{ o.bank_order_id or '—' }}</dd></div>
+    <div><dt>Token</dt><dd class="mono">{{ o.token or '—' }}</dd></div>
+    <div><dt>Trace / RRN</dt><dd class="mono">{{ o.system_trace_no or '—' }} / {{ o.retrieval_ref_no or '—' }}</dd></div>
+    <div><dt>پیام</dt><dd>{{ o.message or '—' }}</dd></div>
+  </dl>
+  <h2>رویدادها</h2>
+  <ol class="events">{% for e in events %}<li><time>{{ e.at | fa_date }}</time> <strong>{{ e.type }}</strong><pre>{{ e.data | tojson_pretty }}</pre></li>{% endfor %}</ol>
+  <a class="btn ghost" href="/admin">بازگشت به فهرست</a>
+</section>
+{% endblock %}

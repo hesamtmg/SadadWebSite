@@ -1,0 +1,4 @@
+<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><title>بازگشت به فروشگاه</title>
+<body onload="document.forms[0].submit()" style="font-family:Tahoma,sans-serif;text-align:center;padding:4rem">
+<p>در حال بازگشت به فروشگاه…</p><form method="post" action="{{ action }}">{% for k, v in fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+<noscript><button>بازگشت به فروشگاه</button></noscript></form></body></html>

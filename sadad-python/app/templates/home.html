@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% set unit = 'تومان' if currency == 'IRT' else 'ریال' %}
+{% set presets = [50000, 250000, 1000000] if currency == 'IRT' else [500000, 2500000, 10000000] %}
+{% block body %}
+<section class="card narrow">
+  <h1>پرداخت آنلاین</h1>
+  <p class="lead">مبلغ و مشخصات خود را وارد کنید. در مرحله بعد اطلاعات را تأیید می‌کنید و به درگاه امن سداد منتقل می‌شوید.</p>
+  {% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+  <form method="post" action="/orders" class="form">
+    <label for="amount">مبلغ ({{ unit }})</label>
+    <div class="amount-input"><input id="amount" name="amount" inputmode="numeric" autocomplete="off" required value="{{ values.amount }}" placeholder="مثلاً {{ presets[1] | fa_num }}"><span>{{ unit }}</span></div>
+    <div class="presets">{% for p in presets %}<button type="button" data-amount="{{ p }}">{{ p | fa_num }} {{ unit }}</button>{% endfor %}</div>
+    <label for="name">نام و نام خانوادگی</label>
+    <input id="name" name="name" required maxlength="80" value="{{ values.name }}">
+    <label for="mobile">شماره موبایل</label>
+    <input id="mobile" name="mobile" inputmode="tel" dir="ltr" placeholder="09121234567" maxlength="11" value="{{ values.mobile }}">
+    <label for="description">بابت (اختیاری)</label>
+    <input id="description" name="description" maxlength="120" value="{{ values.description }}">
+    <button class="btn primary" type="submit">ادامه و بررسی پرداخت</button>
+  </form>
+</section>
+<script>
+document.querySelectorAll('[data-amount]').forEach(b => b.onclick = () => { document.getElementById('amount').value = b.dataset.amount; });
+</script>
+{% endblock %}

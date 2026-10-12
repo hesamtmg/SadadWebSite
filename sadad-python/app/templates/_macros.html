@@ -1,0 +1,8 @@
+{% macro badge(status) -%}
+{%- set s = {'created': ('در انتظار تأیید', 'muted'), 'pending': ('در درگاه بانک', 'warn'), 'verifying': ('در حال تأیید', 'warn'),
+             'paid': ('پرداخت‌شده', 'ok'), 'failed': ('ناموفق', 'bad'), 'canceled': ('لغوشده', 'bad')}.get(status, (status, 'muted')) -%}
+<span class="badge {{ s[1] }}">{{ s[0] }}</span>
+{%- endmacro %}
+{% macro money(o) -%}
+{{ o.amount | fa_num }} <small>{{ 'تومان' if o.currency == 'IRT' else 'ریال' }}</small>
+{%- endmacro %}

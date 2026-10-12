@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }} — پرداخت سداد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if sandbox %}<div class="sandbox-bar">حالت آزمایشی (Sandbox) — پرداخت‌ها به بانک واقعی ارسال نمی‌شوند</div>{% endif %}
+<header class="top"><a class="brand" href="/"><span class="logo">س</span> پرداخت الکترونیک سداد</a><nav><a href="/">پرداخت جدید</a><a href="/admin">تراکنش‌ها</a></nav></header>
+<main>{% block body %}{% endblock %}</main>
+<footer>درگاه پرداخت سداد بانک ملی ایران · Python</footer>
+</body>
+</html>

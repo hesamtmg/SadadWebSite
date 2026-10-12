@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, money %}
+{% block body %}
+{% if o.status == 'paid' %}
+<section class="card narrow result ok">
+  <div class="icon">✓</div>
+  <h1>پرداخت با موفقیت انجام شد</h1>
+  <p class="lead">پرداخت توسط بانک تأیید (Verify) شد. این اطلاعات را برای پیگیری نگه دارید.</p>
+  <dl class="summary">
+    <div><dt>مبلغ</dt><dd class="big">{{ money(o) }}</dd></div>
+    <div><dt>شماره پیگیری (Trace)</dt><dd class="mono">{{ (o.system_trace_no or '—') | fa_digits }}</dd></div>
+    <div><dt>شماره مرجع (RRN)</dt><dd class="mono">{{ (o.retrieval_ref_no or '—') | fa_digits }}</dd></div>
+    <div><dt>شماره سفارش</dt><dd class="mono">{{ o.bank_order_id | fa_digits }}</dd></div>
+    <div><dt>تاریخ</dt><dd>{{ (o.paid_at or o.updated_at) | fa_date }}</dd></div>
+  </dl>
+  <a class="btn primary" href="/">پرداخت جدید</a>
+</section>
+{% else %}
+<section class="card narrow result bad">
+  <div class="icon">!</div>
+  <h1>{{ {'canceled': 'پرداخت لغو شد', 'failed': 'پرداخت ناموفق بود'}.get(o.status, 'وضعیت پرداخت نامشخص است') }}</h1>
+  <p class="lead">{{ o.message or 'مبلغی از حساب شما کسر نشده است؛ در صورت کسر، طی ۷۲ ساعت به حساب شما بازمی‌گردد.' }}</p>
+  <dl class="summary">
+    <div><dt>مبلغ</dt><dd>{{ money(o) }}</dd></div>
+    <div><dt>وضعیت</dt><dd>{{ badge(o.status) }}</dd></div>
+  </dl>
+  {% if o.status in ('failed', 'canceled') %}<form method="post" action="/orders/{{ o.id }}/pay"><button class="btn primary" type="submit">تلاش دوباره</button></form>{% endif %}
+  <a class="btn ghost" href="/">بازگشت</a>
+</section>
+{% endif %}
+{% endblock %}

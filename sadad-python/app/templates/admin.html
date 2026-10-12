@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, money %}
+{% block body %}
+{% set paid = orders | selectattr('status', 'equalto', 'paid') | list %}
+<section class="stats">
+  <div class="card stat"><span>تراکنش‌ها</span><strong>{{ orders | length | fa_num }}</strong></div>
+  <div class="card stat"><span>موفق</span><strong>{{ paid | length | fa_num }}</strong></div>
+  <div class="card stat"><span>جمع دریافتی</span><strong>{{ paid | sum(attribute='amount_rial') | fa_num }} <small>ریال</small></strong></div>
+  <div class="card stat"><span>درگاه</span><strong class="mono small">{{ 'SANDBOX' if sandbox else 'LIVE' }} · {{ terminal_id }}</strong><small class="mono">key {{ key_fp }}</small></div>
+</section>
+<section class="card">
+  <h1>تراکنش‌ها</h1>
+  <div class="table-wrap"><table>
+    <thead><tr><th>تاریخ</th><th>پرداخت‌کننده</th><th>مبلغ</th><th>وضعیت</th><th>OrderId بانک</th><th>پیگیری / RRN</th><th></th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr><td>{{ o.created_at | fa_date }}</td><td>{{ o.name }}<br><small>{{ o.mobile | fa_digits }}</small></td><td>{{ money(o) }}</td><td>{{ badge(o.status) }}</td>
+      <td class="mono">{{ o.bank_order_id or '—' }}</td><td class="mono">{{ [o.system_trace_no, o.retrieval_ref_no] | select | join(' / ') or '—' }}</td>
+      <td><a href="/admin/orders/{{ o.id }}">جزئیات</a></td></tr>
+    {% else %}
+      <tr><td colspan="7" class="empty">هنوز تراکنشی ثبت نشده است.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

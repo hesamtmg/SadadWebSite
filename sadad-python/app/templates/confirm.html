@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, money %}
+{% block body %}
+<section class="card narrow">
+  <h1>تأیید اطلاعات پرداخت</h1>
+  <p class="lead">لطفاً اطلاعات زیر را بررسی کنید. با زدن «تأیید و پرداخت» به درگاه سداد منتقل می‌شوید.</p>
+  {% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+  <dl class="summary">
+    <div><dt>مبلغ</dt><dd class="big">{{ money(o) }}</dd></div>
+    {% if o.currency == 'IRT' %}<div><dt>مبلغ ارسالی به بانک</dt><dd>{{ o.amount_rial | fa_num }} <small>ریال</small></dd></div>{% endif %}
+    <div><dt>پرداخت‌کننده</dt><dd>{{ o.name }}</dd></div>
+    {% if o.mobile %}<div><dt>موبایل</dt><dd>{{ o.mobile | fa_digits }}</dd></div>{% endif %}
+    {% if o.description %}<div><dt>بابت</dt><dd>{{ o.description }}</dd></div>{% endif %}
+    <div><dt>وضعیت</dt><dd>{{ badge(o.status) }}</dd></div>
+  </dl>
+  <form method="post" action="/orders/{{ o.id }}/pay"><button class="btn primary" type="submit">تأیید و پرداخت</button></form>
+  <a class="btn ghost" href="/">انصراف و ویرایش</a>
+</section>
+{% endblock %}

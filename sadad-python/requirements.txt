@@ -1,0 +1,4 @@
+flask>=3.1,<4
+cryptography>=42
+gunicorn>=23
+tzdata  # time zone data for Windows; harmless elsewhere

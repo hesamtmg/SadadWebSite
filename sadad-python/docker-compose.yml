@@ -1,0 +1,16 @@
+name: sadad-python
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    volumes:
+      - data:/app/data
+
+volumes:
+  data:
