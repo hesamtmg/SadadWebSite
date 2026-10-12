@@ -1,0 +1,5 @@
+RewriteEngine On
+# Pass the Authorization header through to PHP (needed for /admin Basic auth under some setups)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]

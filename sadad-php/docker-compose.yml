@@ -1,0 +1,16 @@
+name: sadad-php
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /var/www/html/data
+    ports:
+      - "${HOST_PORT:-8090}:80"
+    volumes:
+      - data:/var/www/html/data
+
+volumes:
+  data:
