@@ -65,7 +65,7 @@ if [ "$(wp option get sadad_demo_setup_done 2>/dev/null || true)" != "yes" ]; th
 
   echo "==> Configuring the Sadad gateway"
   wp option update woocommerce_sadad_electronic_payment_settings "$(cat <<JSON
-{"enabled":"yes","title":"پرداخت با کارت بانکی (سداد)","description":"پرداخت امن از طریق درگاه سداد بانک ملی با تمام کارت‌های عضو شتاب","merchant_id":"$SADAD_MERCHANT_ID","terminal_id":"$SADAD_TERMINAL_ID","terminal_key":"$SADAD_TERMINAL_KEY","currency_mode":"auto","debug":"yes"}
+{"enabled":"yes","title":"پرداخت با کارت بانکی (سداد)","description":"پرداخت امن از طریق درگاه سداد بانک ملی با تمام کارت‌های عضو شتاب","merchant_id":"","terminal_id":"","terminal_key":"","currency_mode":"auto","debug":"yes"}
 JSON
 )" --format=json
 
@@ -102,6 +102,22 @@ EOF
   wp post delete 1 --force >/dev/null 2>&1 || true
 
   wp option update sadad_demo_setup_done yes
+fi
+
+# Real Sadad credentials from .env are applied on every run, so editing .env + `docker compose up -d` takes effect.
+# The sandbox key is never stored as a real credential (older .env files had it in SADAD_TERMINAL_KEY).
+if [ -n "${SADAD_TERMINAL_ID:-}" ] && [ -n "${SADAD_TERMINAL_KEY:-}" ] && [ "$SADAD_TERMINAL_KEY" != "${SADAD_SANDBOX_TERMINAL_KEY:-}" ]; then
+  echo "==> Applying real Sadad credentials from .env (TerminalId $SADAD_TERMINAL_ID)"
+  wp eval '
+    $o = "woocommerce_sadad_electronic_payment_settings";
+    $s = (array) get_option($o, array());
+    $s["merchant_id"]  = getenv("SADAD_MERCHANT_ID");
+    $s["terminal_id"]  = getenv("SADAD_TERMINAL_ID");
+    $s["terminal_key"] = preg_replace("/[\x00-\x20\x7f]+/", "", getenv("SADAD_TERMINAL_KEY"));
+    $k = base64_decode($s["terminal_key"], true);
+    if (!is_string($k) || strlen($k) !== 24) { fwrite(STDERR, "SADAD_TERMINAL_KEY in .env is not Base64 of 24 bytes; not applied.\n"); exit(1); }
+    update_option($o, $s);
+  '
 fi
 
 # WooCommerce registers its shop/product URLs after the permalink structure was set.

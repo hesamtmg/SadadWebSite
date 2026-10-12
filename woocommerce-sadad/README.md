@@ -50,10 +50,13 @@ The first start takes 1–3 minutes. Later starts are instant: the setup step se
 
 ## Going live with real Sadad
 
-1. Get **MerchantId**, **TerminalId** and **TerminalKey** from Bank Melli / Sadad.
-2. Set them in the admin: **پرداخت الکترونیک سداد → تنظیمات درگاه**. Or put them in `.env` before the very first `docker compose up`.
-3. Set `SADAD_MODE=live` in `.env`, then run `docker compose up -d` again.
+1. Get your **MerchantId**, **TerminalId** and **TerminalKey** from Bank Melli / Sadad.
+2. Put them in `.env` (`SADAD_MERCHANT_ID`, `SADAD_TERMINAL_ID`, `SADAD_TERMINAL_KEY`) and set `SADAD_MODE=live`.
+   Or leave them empty in `.env` and enter them in **Admin → پرداخت الکترونیک سداد → تنظیمات درگاه**.
+3. Run `docker compose up -d`. Credentials from `.env` are applied on every start; check `docker compose logs setup` for `Applying real Sadad credentials`.
 4. Sadad only talks to a server it can reach. The site needs a public domain (usually on an Iranian IP), and Sadad must have your callback URL registered. The settings page shows that URL under «آدرس بازگشت». `localhost` will not work with the real bank.
+
+Sandbox mode never uses your real credentials: it has built-in test ones (`SANDBOX_*` in `.env`) that match the mock bank. You can switch between `sandbox` and `live` without re-entering anything.
 
 ## Folder layout
 
@@ -86,8 +89,16 @@ docker compose down -v                # stop and DELETE everything (fresh instal
 - Declares compatibility with HPOS (custom order tables) and the cart/checkout blocks.
 - Endpoints go through a `sadad_electronic_payment_endpoints` filter, so the sandbox can replace them. The defaults are still the real `sadad.shaparak.ir` URLs.
 - Fixed the settings-page health check that showed **DES-EDE3 «در دسترس نیست»** on OpenSSL 3 (the cipher is listed as `des-ede3-ecb` there; encryption itself always worked).
+- Fixed the WooCommerce settings page saving the literal text `terminal_key` as the key when the TerminalKey field was submitted empty.
+- ResCode 1025 now adds a hint ("TerminalKey doesn't match TerminalId …") to the error, and the log records the TerminalId and a key fingerprint.
 
 ## Troubleshooting
+
+- **ResCode 1025 «اطلاعات SignData ارسالی اشتباه است»**: this comes from the real Sadad server. It means the TerminalKey in the store is not the key Sadad has for that TerminalId. The plugin's signing matches Sadad's official sample, so check the credentials:
+  - The admin shows a red "live mode is using the sandbox TerminalKey" notice → you are still on the test key; enter the real one.
+  - Copy the key exactly as Sadad sent it (Base64, 24 bytes after decoding) and make sure it belongs to the same TerminalId (keys are per terminal).
+  - Compare `key_fingerprint` in the log (WooCommerce → Status → Logs → `sadad-electronic-payment`) before and after you save, to confirm the new key is actually in use.
+  - If all of that is right, ask Sadad support to confirm the key for your TerminalId; a terminal re-issue changes the key.
 
 - **Port already in use**: change `WP_PORT` / `SADAD_SANDBOX_PORT` in `.env`. If you change `WP_PORT`, also change `SITE_URL`, then run `docker compose down -v && docker compose up -d`.
 - **Setup failed downloading WooCommerce**: check internet access, then run `docker compose up setup` again.

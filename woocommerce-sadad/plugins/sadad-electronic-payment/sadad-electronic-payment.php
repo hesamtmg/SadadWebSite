@@ -340,7 +340,8 @@ function sadad_electronic_payment_bootstrap() {
 
         public function validate_terminal_key_field($key, $value) {
             $value = preg_replace('/[\x00-\x20\x7f]+/', '', (string) $value);
-            if ($value === '' && $key !== '') return $key;
+            // Empty field means "keep the saved key" ($key is the field name, not the stored key).
+            if ($value === '') return (string) $this->get_option('terminal_key', '');
             return $value;
         }
 
@@ -389,8 +390,12 @@ function sadad_electronic_payment_bootstrap() {
                 if ((string) ($response['ResCode'] ?? '') !== '0' || empty($response['Token'])) {
                     $code = isset($response['ResCode']) ? (string) $response['ResCode'] : 'no-code';
                     $desc = isset($response['Description']) ? sanitize_text_field($response['Description']) : 'پاسخ نامعتبر از سداد';
+                    if ($code === '1025') {
+                        // Sadad could not verify SignData with the key it holds for this TerminalId.
+                        $desc .= ' — TerminalKey ذخیره‌شده با TerminalId ' . $terminal_id . ' همخوانی ندارد؛ کلید را دقیقاً مطابق اطلاعات دریافتی از سداد وارد کنید.';
+                    }
                     sadad_electronic_payment_tx_update($tx_id, array('status'=>'failed','res_code'=>$code,'message'=>$desc));
-                    $this->log('error', 'PaymentRequest rejected.', array('res_code' => $code, 'description' => $desc));
+                    $this->log('error', 'PaymentRequest rejected.', array('res_code' => $code, 'description' => $desc, 'terminal_id' => $terminal_id, 'merchant_id' => $merchant_id, 'key_fingerprint' => substr(hash('sha256', $key), 0, 12)));
                     throw new Exception(sprintf('درخواست پرداخت توسط سداد پذیرفته نشد: %s [ResCode: %s]', $desc, $code));
                 }
 

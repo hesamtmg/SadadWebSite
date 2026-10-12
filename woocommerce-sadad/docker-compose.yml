@@ -8,6 +8,9 @@ x-wp-env: &wp-env
   SADAD_MODE: ${SADAD_MODE}
   SADAD_SANDBOX_INTERNAL_URL: http://sadad-mock
   SADAD_SANDBOX_PUBLIC_URL: http://localhost:${SADAD_SANDBOX_PORT}
+  SADAD_SANDBOX_MERCHANT_ID: ${SANDBOX_MERCHANT_ID:-000000140336964}
+  SADAD_SANDBOX_TERMINAL_ID: ${SANDBOX_TERMINAL_ID:-24095674}
+  SADAD_SANDBOX_TERMINAL_KEY: ${SANDBOX_TERMINAL_KEY:-O0hoZrcZPeGRqEEMRuwJlmuBSaVkmpEu}
 
 x-wp-volumes: &wp-volumes
   - wordpress:/var/www/html
@@ -69,9 +72,9 @@ services:
       STORE_CURRENCY: ${STORE_CURRENCY}
       SHIPPING_COST: ${SHIPPING_COST}
       FREE_SHIPPING_MIN: ${FREE_SHIPPING_MIN}
-      SADAD_MERCHANT_ID: ${SADAD_MERCHANT_ID}
-      SADAD_TERMINAL_ID: ${SADAD_TERMINAL_ID}
-      SADAD_TERMINAL_KEY: ${SADAD_TERMINAL_KEY}
+      SADAD_MERCHANT_ID: ${SADAD_MERCHANT_ID:-}
+      SADAD_TERMINAL_ID: ${SADAD_TERMINAL_ID:-}
+      SADAD_TERMINAL_KEY: ${SADAD_TERMINAL_KEY:-}
     volumes:
       - wordpress:/var/www/html
       - ./plugins/sadad-electronic-payment:/var/www/html/wp-content/plugins/sadad-electronic-payment
@@ -87,9 +90,9 @@ services:
     ports:
       - "${SADAD_SANDBOX_PORT}:80"
     environment:
-      SADAD_MERCHANT_ID: ${SADAD_MERCHANT_ID}
-      SADAD_TERMINAL_ID: ${SADAD_TERMINAL_ID}
-      SADAD_TERMINAL_KEY: ${SADAD_TERMINAL_KEY}
+      SADAD_MERCHANT_ID: ${SANDBOX_MERCHANT_ID:-000000140336964}
+      SADAD_TERMINAL_ID: ${SANDBOX_TERMINAL_ID:-24095674}
+      SADAD_TERMINAL_KEY: ${SANDBOX_TERMINAL_KEY:-O0hoZrcZPeGRqEEMRuwJlmuBSaVkmpEu}
     volumes:
       - ./sadad-mock:/app:ro
     command: ["php", "-S", "0.0.0.0:80", "-t", "/app", "/app/index.php"]
