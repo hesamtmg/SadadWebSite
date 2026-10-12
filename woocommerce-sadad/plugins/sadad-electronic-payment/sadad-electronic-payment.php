@@ -385,7 +385,7 @@ function sadad_electronic_payment_bootstrap() {
                     'return_url' => $return_url, 'json_types' => array_map('gettype', $payload),
                 ));
 
-                $response = $this->post_json(self::REQUEST_URL, $payload);
+                $response = $this->post_json($this->endpoint('request'), $payload);
                 if ((string) ($response['ResCode'] ?? '') !== '0' || empty($response['Token'])) {
                     $code = isset($response['ResCode']) ? (string) $response['ResCode'] : 'no-code';
                     $desc = isset($response['Description']) ? sanitize_text_field($response['Description']) : 'پاسخ نامعتبر از سداد';
@@ -400,7 +400,7 @@ function sadad_electronic_payment_bootstrap() {
                 $order->add_order_note('توکن پرداخت سداد دریافت شد.');
                 $order->save();
 
-                return array('result' => 'success', 'redirect' => self::PAYMENT_URL . rawurlencode($token));
+                return array('result' => 'success', 'redirect' => $this->endpoint('payment') . rawurlencode($token));
             } catch (Throwable $e) {
                 if ($tx_id) sadad_electronic_payment_tx_update($tx_id, array('status'=>'failed','message'=>$e->getMessage()));
                 $this->log('error', 'Payment start failed.', array('message' => $e->getMessage()));
@@ -440,7 +440,7 @@ function sadad_electronic_payment_bootstrap() {
                     throw new Exception('توکن بازگشتی با درخواست اولیه تطابق ندارد.');
                 }
 
-                $verify = $this->post_json(self::VERIFY_URL, array('Token' => $token, 'SignData' => $this->encrypt($token, $this->decoded_key(true))));
+                $verify = $this->post_json($this->endpoint('verify'), array('Token' => $token, 'SignData' => $this->encrypt($token, $this->decoded_key(true))));
                 if ((string) ($verify['ResCode'] ?? '') !== '0') {
                     throw new Exception('تأیید تراکنش در سداد ناموفق بود. [ResCode: ' . (string) ($verify['ResCode'] ?? 'no-code') . ']');
                 }
@@ -471,6 +471,18 @@ function sadad_electronic_payment_bootstrap() {
                 wp_safe_redirect($order->get_checkout_payment_url());
                 exit;
             }
+        }
+
+        /**
+         * Sadad endpoint URLs. Filterable so a local sandbox can stand in for the bank.
+         */
+        private function endpoint($name) {
+            $endpoints = apply_filters('sadad_electronic_payment_endpoints', array(
+                'request' => self::REQUEST_URL,
+                'verify'  => self::VERIFY_URL,
+                'payment' => self::PAYMENT_URL,
+            ));
+            return $endpoints[$name];
         }
 
         private function post_json($url, array $payload) {
@@ -555,3 +567,21 @@ function sadad_electronic_payment_bootstrap() {
         return $gateways;
     });
 }
+
+add_action('before_woocommerce_init', function () {
+    if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', SADAD_ELECTRONIC_PAYMENT_FILE, true);
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', SADAD_ELECTRONIC_PAYMENT_FILE, true);
+    }
+});
+
+// Checkout block support: without it the gateway only shows on the shortcode checkout.
+add_action('woocommerce_blocks_loaded', function () {
+    if (!class_exists(\Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType::class)) {
+        return;
+    }
+    require_once __DIR__ . '/includes/class-sadad-electronic-payment-blocks.php';
+    add_action('woocommerce_blocks_payment_method_type_registration', function ($registry) {
+        $registry->register(new Sadad_Electronic_Payment_Blocks());
+    });
+});

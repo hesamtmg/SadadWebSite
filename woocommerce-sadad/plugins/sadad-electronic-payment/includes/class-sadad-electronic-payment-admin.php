@@ -323,7 +323,7 @@ class Sadad_Electronic_Payment_Admin {
         $return_url = function_exists('WC') && WC() ? WC()->api_request_url('WC_Gateway_Sadad') : home_url('/wc-api/WC_Gateway_Sadad/');
 
         $openssl_ok = extension_loaded('openssl');
-        $cipher_ok = $openssl_ok && in_array('des-ede3', openssl_get_cipher_methods(), true);
+        $cipher_ok = $openssl_ok && (in_array('des-ede3', openssl_get_cipher_methods(), true) || in_array('des-ede3-ecb', openssl_get_cipher_methods(), true));
         $key_decoded = $has_key ? base64_decode((string) $settings['terminal_key'], true) : false;
         $key_ok = is_string($key_decoded) && strlen($key_decoded) === 24;
 
