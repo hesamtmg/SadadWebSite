@@ -1,0 +1,14 @@
+{
+  "name": "sadad-node",
+  "version": "1.0.0",
+  "description": "Sadad (Bank Melli) payment gateway for Node.js with a payment UI, confirm page and Verify step",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=18.17" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "sign": "node scripts/sign.js"
+  }
+}
